@@ -36,6 +36,25 @@ export interface DashboardStats {
 }
 
 /**
+ * Derive dashboard statistics from a conversations array.
+ */
+export function computeDashboardStats(
+  conversations: Conversation[]
+): DashboardStats {
+  return {
+    totalConversations: conversations.length,
+    openConversations: conversations.filter(
+      (c) => c.conversationStatus === "OPEN"
+    ).length,
+    closedConversations: conversations.filter(
+      (c) => c.conversationStatus === "CLOSED"
+    ).length,
+    totalMessages: 0, // This would require fetching individual messages
+    lastUpdated: new Date().toISOString(),
+  };
+}
+
+/**
  * Fetch conversations for the channel
  */
 export async function getConversations(): Promise<Conversation[]> {
@@ -76,37 +95,5 @@ export async function getConversation(
   } catch (error) {
     console.error("Error fetching conversation:", error);
     return null;
-  }
-}
-
-/**
- * Calculate dashboard statistics
- */
-export async function getDashboardStats(): Promise<DashboardStats> {
-  try {
-    const conversations = await getConversations();
-
-    const stats: DashboardStats = {
-      totalConversations: conversations.length,
-      openConversations: conversations.filter(
-        (c) => c.conversationStatus === "OPEN"
-      ).length,
-      closedConversations: conversations.filter(
-        (c) => c.conversationStatus === "CLOSED"
-      ).length,
-      totalMessages: 0, // This would require fetching individual messages
-      lastUpdated: new Date().toISOString(),
-    };
-
-    return stats;
-  } catch (error) {
-    console.error("Error calculating stats:", error);
-    return {
-      totalConversations: 0,
-      openConversations: 0,
-      closedConversations: 0,
-      totalMessages: 0,
-      lastUpdated: new Date().toISOString(),
-    };
   }
 }
