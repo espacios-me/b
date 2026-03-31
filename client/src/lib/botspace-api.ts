@@ -1,11 +1,9 @@
 /**
  * BotSpace API Client
- * Handles communication with the BotSpace Public API
+ * Uses internal backend proxy routes so secrets remain server-side
  */
 
-const API_BASE = "https://public-api.bot.space";
-const CHANNEL_ID = "690c66ec2a221421bdc2b6d1";
-const API_KEY = "botspace_5ed2f2b9-d7e2-444f-9dee-3411273c5848";
+const BOTSPACE_PROXY_BASE = "/api/botspace";
 
 export interface Conversation {
   id: string;
@@ -40,9 +38,7 @@ export interface DashboardStats {
  */
 export async function getConversations(): Promise<Conversation[]> {
   try {
-    const response = await fetch(
-      `${API_BASE}/v1/${CHANNEL_ID}/conversation?apiKey=${API_KEY}`
-    );
+    const response = await fetch(`${BOTSPACE_PROXY_BASE}/conversations`);
 
     if (!response.ok) {
       throw new Error(`API error: ${response.statusText}`);
@@ -64,7 +60,7 @@ export async function getConversation(
 ): Promise<Conversation | null> {
   try {
     const response = await fetch(
-      `${API_BASE}/v1/${CHANNEL_ID}/conversation/${conversationId}?apiKey=${API_KEY}`
+      `${BOTSPACE_PROXY_BASE}/conversations/${conversationId}`
     );
 
     if (!response.ok) {
