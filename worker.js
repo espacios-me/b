@@ -1,12 +1,12 @@
 /**
  * Cloudflare Worker for BotSpace Dashboard
- * Routes requests to the static dashboard
+ * Routes requests to the static dashboard at /bot
  */
 
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
-    
+
     // Route /bot to the dashboard
     if (url.pathname === '/bot' || url.pathname === '/bot/') {
       return new Response(
@@ -21,11 +21,11 @@ export default {
     }
 
     // Serve static assets
-    if (url.pathname.startsWith('/bot/assets/') || 
+    if (url.pathname.startsWith('/bot/assets/') ||
         url.pathname.startsWith('/bot/')) {
       const assetPath = url.pathname.replace('/bot', '');
       const assetUrl = new URL(assetPath, url);
-      
+
       return fetch(new Request(assetUrl, request));
     }
 
