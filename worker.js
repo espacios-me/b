@@ -1,10 +1,16 @@
 /**
  * Cloudflare Worker for BotSpace Dashboard
- * Routes requests to the static dashboard at /botspace
+ * Production model: Workers-first (Worker + static assets via Wrangler assets binding)
  */
 
+function rewriteToAssetRequest(request, path) {
+  const url = new URL(request.url);
+  url.pathname = path;
+  return new Request(url.toString(), request);
+}
+
 export default {
-  async fetch(request, env, ctx) {
+  async fetch(request, env) {
     const url = new URL(request.url);
 
     // Redirect legacy /bot path to /botspace
@@ -12,28 +18,18 @@ export default {
       return Response.redirect(`${url.origin}/botspace`, 301);
     }
 
-    // Route /botspace to the dashboard
+    // Only own /botspace paths in this Worker
+    if (!url.pathname.startsWith('/botspace')) {
+      return new Response('Not Found', { status: 404 });
+    }
+
+    // Serve the SPA shell for /botspace
     if (url.pathname === '/botspace' || url.pathname === '/botspace/') {
-      return new Response(
-        await fetch(new Request(new URL('/index.html', url), request)),
-        {
-          headers: {
-            'Content-Type': 'text/html; charset=utf-8',
-            'Cache-Control': 'public, max-age=3600',
-          },
-        }
-      );
+      return env.ASSETS.fetch(rewriteToAssetRequest(request, '/index.html'));
     }
 
-    // Serve static assets
-    if (url.pathname.startsWith('/botspace/assets/') ||
-        url.pathname.startsWith('/botspace/')) {
-      const assetPath = url.pathname.replace('/botspace', '');
-      const assetUrl = new URL(assetPath, url);
-
-      return fetch(new Request(assetUrl, request));
-    }
-
-    return new Response('Not Found', { status: 404 });
+    // Strip /botspace prefix and resolve assets from dist/public
+    const assetPath = url.pathname.replace(/^\/botspace/, '') || '/index.html';
+    return env.ASSETS.fetch(rewriteToAssetRequest(request, assetPath));
   },
 };
