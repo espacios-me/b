@@ -5,16 +5,40 @@ BotSpace Dashboard is a React + TypeScript analytics app for WhatsApp conversati
 ## App structure
 
 - `client/` — frontend app (React + TypeScript + Tailwind)
-- `server/` — Express static host for production build output
+- `server/` — Express app for API proxy routes and static hosting in production
 - `worker.js` — Cloudflare Worker route wrapper
 - `package.json` — scripts for dev/build/check/format
+
+## Environment variables
+
+Create a `.env` file in the project root with:
+
+```bash
+BOTSPACE_API_KEY=your_botspace_api_key
+BOTSPACE_CHANNEL_ID=your_botspace_channel_id
+GEMINI_API_KEY=your_gemini_api_key
+```
+
+These are required by the backend proxy routes:
+
+- `GET /api/botspace/conversations`
+- `GET /api/botspace/conversations/:conversationId`
+- `POST /api/gemini/generate`
 
 ## Run locally
 
 ```bash
 pnpm install
-pnpm dev
+pnpm build
+pnpm start
 ```
+
+This runs the Express server, which serves the frontend and proxies BotSpace/Gemini requests using server-side environment variables.
+
+## Development note
+
+`pnpm dev` runs only the Vite frontend dev server and does not include the Express API proxy.
+Use `pnpm build && pnpm start` when testing BotSpace/Gemini integrations end-to-end.
 
 ## Quality checks
 
@@ -40,6 +64,7 @@ The Worker is configured for canonical route `/bot`:
 
 Expected URL:
 
+- `https://espacios.me/botspace`
 - `https://espacios.me/bot`
 
 ## Security note

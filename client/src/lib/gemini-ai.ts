@@ -1,17 +1,45 @@
 /**
  * Gemini AI Integration
- * Provides AI-powered insights and analysis for BotSpace conversations
+ * Uses internal backend proxy routes so secrets remain server-side
  */
 
-const GEMINI_API_KEY = "AIzaSyBDW85y2XgKnmeGJ2DSEX5qZZbQPW_Pri0";
-const GEMINI_API_URL =
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+const GEMINI_PROXY_URL = "/api/gemini/generate";
 
 export interface AIInsight {
   summary: string;
   sentiment: "positive" | "negative" | "neutral";
   keyTopics: string[];
   recommendations: string[];
+}
+
+interface GeminiGenerateRequest {
+  contents: Array<{
+    parts: Array<{
+      text: string;
+    }>;
+  }>;
+  generationConfig: {
+    temperature: number;
+    topK: number;
+    topP: number;
+    maxOutputTokens: number;
+  };
+}
+
+async function callGemini(payload: GeminiGenerateRequest): Promise<any> {
+  const response = await fetch(GEMINI_PROXY_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Gemini API error: ${response.statusText}`);
+  }
+
+  return response.json();
 }
 
 /**
@@ -32,40 +60,25 @@ Format your response as JSON with keys: summary, sentiment, keyTopics, recommend
 Conversation:
 ${conversationText}`;
 
-    const response = await fetch(
-      `${GEMINI_API_URL}?key=${GEMINI_API_KEY}`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          contents: [
+    const data = await callGemini({
+      contents: [
+        {
+          parts: [
             {
-              parts: [
-                {
-                  text: prompt,
-                },
-              ],
+              text: prompt,
             },
           ],
-          generationConfig: {
-            temperature: 0.7,
-            topK: 40,
-            topP: 0.95,
-            maxOutputTokens: 1024,
-          },
-        }),
-      }
-    );
+        },
+      ],
+      generationConfig: {
+        temperature: 0.7,
+        topK: 40,
+        topP: 0.95,
+        maxOutputTokens: 1024,
+      },
+    });
 
-    if (!response.ok) {
-      throw new Error(`Gemini API error: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    const responseText =
-      data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
     // Parse JSON from response
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
@@ -107,40 +120,25 @@ export async function generateDashboardSummary(stats: {
 
 Provide actionable insights about the conversation status.`;
 
-    const response = await fetch(
-      `${GEMINI_API_URL}?key=${GEMINI_API_KEY}`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          contents: [
+    const data = await callGemini({
+      contents: [
+        {
+          parts: [
             {
-              parts: [
-                {
-                  text: prompt,
-                },
-              ],
+              text: prompt,
             },
           ],
-          generationConfig: {
-            temperature: 0.7,
-            topK: 40,
-            topP: 0.95,
-            maxOutputTokens: 256,
-          },
-        }),
-      }
-    );
+        },
+      ],
+      generationConfig: {
+        temperature: 0.7,
+        topK: 40,
+        topP: 0.95,
+        maxOutputTokens: 256,
+      },
+    });
 
-    if (!response.ok) {
-      throw new Error(`Gemini API error: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    const summary =
-      data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    const summary = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
     return summary;
   } catch (error) {
@@ -163,40 +161,25 @@ Message: "${lastMessage}"
 Provide exactly 3 different response suggestions as a JSON array. Format:
 ["suggestion 1", "suggestion 2", "suggestion 3"]`;
 
-    const response = await fetch(
-      `${GEMINI_API_URL}?key=${GEMINI_API_KEY}`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          contents: [
+    const data = await callGemini({
+      contents: [
+        {
+          parts: [
             {
-              parts: [
-                {
-                  text: prompt,
-                },
-              ],
+              text: prompt,
             },
           ],
-          generationConfig: {
-            temperature: 0.8,
-            topK: 40,
-            topP: 0.95,
-            maxOutputTokens: 512,
-          },
-        }),
-      }
-    );
+        },
+      ],
+      generationConfig: {
+        temperature: 0.8,
+        topK: 40,
+        topP: 0.95,
+        maxOutputTokens: 512,
+      },
+    });
 
-    if (!response.ok) {
-      throw new Error(`Gemini API error: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    const responseText =
-      data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
     // Parse JSON array from response
     const jsonMatch = responseText.match(/\[[\s\S]*\]/);
