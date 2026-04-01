@@ -55,13 +55,18 @@ pnpm start
 
 ## Cloudflare route behavior
 
-The Worker is configured for `/botspace`:
+The Worker is configured for canonical route `/bot`:
 
-- Redirects legacy `/bot` and `/bot/` to `/botspace`
-- Serves `/botspace` and `/botspace/` with `index.html`
-- Serves `/botspace/assets/*` and `/botspace/*` static paths by stripping `/botspace`
-- Returns `404` for paths outside `/botspace`
+- Serves `/bot` and `/bot/` with `index.html` (primary paths)
+- Serves `/bot/assets/*` and `/bot/*` static paths by stripping `/bot`
+- Redirects legacy `/botspace` and `/botspace/*` to canonical `/bot` routes
+- Returns `404` for paths outside `/bot`
 
 Expected URL:
 
 - `https://espacios.me/botspace`
+- `https://espacios.me/bot`
+
+## Security note
+
+For production, move API keys to environment variables and proxy sensitive requests server-side.
