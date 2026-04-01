@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import {
+  computeDashboardStats,
   Conversation,
   DashboardStats,
   getConversations,
-  getDashboardStats,
 } from "@/lib/botspace-api";
 
 export interface UseBotSpaceDataResult {
@@ -25,10 +25,8 @@ export function useBotSpaceData(): UseBotSpaceDataResult {
       setLoading(true);
       setError(null);
 
-      const [conversationsData, statsData] = await Promise.all([
-        getConversations(),
-        getDashboardStats(),
-      ]);
+      const conversationsData = await getConversations();
+      const statsData = computeDashboardStats(conversationsData);
 
       setConversations(conversationsData);
       setStats(statsData);
